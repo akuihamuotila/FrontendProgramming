@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Front End Programming / React</title>
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/babel-standalone@6.26.0/babel.min.js"></script>
+
+    <script type="text/babel">
+      function TextComponent(props) {
+        // Ehdollinen renderöinti
+        if (props.text.length <= 5) {
+          return <div>{props.text}</div>;
+        } else {
+          return <div>Liian pitkä</div>;
+        }
+      }
+
+      // Kysytään käyttäjältä tekstiä
+      const userInput = window.prompt('Syötä teksti');
+
+      const root = ReactDOM.createRoot(document.getElementById("root"));
+      root.render(<TextComponent text={userInput} />);
+    </script>
+  </body>
+</html>

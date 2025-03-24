@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trivia</title>
+</head>
+<body>
+  <h1>Trivia</h1>
+  <p id="question">Question: Paina nappia!</p>
+  <button onclick="fetchQuestion()">New question</button>
+  <button onclick="showAnswer()" id="answerButton" style="display: none;">Show answer</button>
+  <p id="answer" style="display: none; font-weight: bold;"></p>
+  <p id="error" style="color: red;"></p>
+
+  <script>
+    let currentAnswer = "";
+
+    async function fetchQuestion() {
+      try {
+        const response = await fetch('https://opentdb.com/api.php?amount=1');
+        // Tarkistetaan onko API palauttanut virhekoodin 429 (Too Many Requests)
+        if (response.status === 429) {
+          document.getElementById('error').textContent = "Yritä hetken kuluttua uudelleen.";
+          return;
+        }
+        const data = await response.json();
+        const question = data.results[0].question;
+        currentAnswer = data.results[0].correct_answer;
+        document.getElementById('question').innerHTML = `Question: ${question}`; // Dekoodataan HTML-entiteetit
+        document.getElementById('error').textContent = "";
+        document.getElementById('answer').style.display = "none";
+        document.getElementById('answer').textContent = "";
+        document.getElementById('answerButton').style.display = "inline-block";
+      } catch {
+        document.getElementById('error').textContent = "Tapahtui virhe.";
+      }
+    }
+
+    // Näyttää kysymyksen oikean vastauksen ja piilottaa "Show answer" -painikkeen
+    function showAnswer() {
+      document.getElementById('answer').textContent = `Answer: ${currentAnswer}`;
+      document.getElementById('answer').style.display = "block";
+      document.getElementById('answerButton').style.display = "none";
+    }
+  </script>
+</body>
+</html>

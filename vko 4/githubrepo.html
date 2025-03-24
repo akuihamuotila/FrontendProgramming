@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>React Github Jutut</title>
+</head>
+<body>
+  <!-- We will put our React component inside this div. -->
+  <div id="root"></div>
+
+  <!-- Load React & Babel -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/babel-standalone@6.26.0/babel.min.js"></script>
+
+  <!-- React component code -->
+  <script type="text/babel">
+      function RepoList() {
+          const [repos, setRepos] = React.useState([]);
+          const [query, setQuery] = React.useState("react");
+
+          const getRepos = () => {
+              fetch(`https://api.github.com/search/repositories?q=${query}`)
+              .then(response => {
+                  if (!response.ok)
+                      throw new Error("Error fetching repositories: " + response.statusText);
+
+                  return response.json();
+              })
+              .then(responseData => setRepos(responseData.items))
+              .catch(err => console.error(err));
+          }
+
+          return(
+              <React.Fragment>
+                  <h3>Repositories</h3>
+                  <input 
+                      type="text" 
+                      value={query} 
+                      onChange={(e) => setQuery(e.target.value)} 
+                  />
+                  <button onClick={getRepos}>Search</button>
+                  <table>
+                      <thead>
+                          <tr>
+                              <th>Name</th>
+                              <th>URL</th>
+                          </tr>
+                      </thead>
+                      <tbody>
+                          {
+                              repos.map(repo => 
+                                  <tr key={repo.id}>
+                                      <td>{repo.full_name}</td>
+                                      <td><a href={repo.html_url} target="_blank">{repo.html_url}</a></td>
+                                  </tr>
+                              )
+                          }
+                      </tbody>
+                  </table>
+              </React.Fragment>
+          );
+      }
+
+      const root = ReactDOM.createRoot(document.getElementById('root'))
+      root.render(<RepoList />);
+  </script>
+</body>
+</html>

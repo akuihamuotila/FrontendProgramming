@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Front End Programming / React</title>
+  </head>
+  <body>
+    <!-- We will put our React component inside this div. -->
+    <div id="root"></div>
+
+    <!-- Load React & Babel -->
+    <!-- Note: when deploying, replace "development.js" with "production.min.js". -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/babel-standalone@6.26.0/babel.min.js"></script>
+
+    <!-- React component code -->
+    <script type="text/babel">
+        function NasaApod() {
+            const [data, setData] = React.useState({});
+            const [loading, setLoading] = React.useState(false);
+
+            React.useEffect(() => {
+                setLoading(true);
+                fetchData();
+            }, []);
+
+            const fetchData = () => {
+                fetch("https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY").then(response => {
+                    if (!response.ok)
+                        throw Error("Error in fetch: " + response.statusText);
+
+                    return response.json();
+                })
+                .then(data => setData(data))
+                .catch(error => console.error(error))
+                .finally(() => setLoading(false))
+            }
+
+            if (loading)
+                return <h1> Loading... Loading... Loading... </h1>
+
+            return(
+                <React.Fragment>
+                    <h1> Nasa APOD </h1>
+                    <h3> {data.explanation} </h3>
+                    <img alt="Nasa APOD image" src={data.url} />
+                </React.Fragment>
+            )
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById("root"));
+        root.render(<NasaApod />);
+    </script>
+  </body>
+</html>
