@@ -1,5 +1,5 @@
-import Carlist from "./components/Carlist";
-import Container from "@mui/material/Container";
+import Carlist from "./components/Carlist"
+import Container from '@mui/material/Container';
 import CssBaseline from "@mui/material/CssBaseline";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
@@ -15,8 +15,8 @@ function App() {
       </AppBar>
       <Carlist />
       <CssBaseline />
-    </Container>
-  );
+    </Container> 
+  )
 }
 
-export default App;
+export default App
