@@ -8,6 +8,9 @@ import {
 } from "ag-grid-community";
 import { Customer } from "../types";
 import "ag-grid-community/styles/ag-theme-material.css";
+import Button from "@mui/material/Button";
+import AddCustomer from "./AddCustomer";
+import EditCustomer from "./EditCustomer";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
@@ -35,7 +38,24 @@ const mockCustomers: Customer[] = [
 export default function CustomerList() {
   const [customers, setCustomers] = useState<Customer[]>([]);
 
-  const [columnDefs] = useState<ColDef<Customer>[]>([
+  const fetchCustomers = () => {
+    setCustomers(mockCustomers);
+  };
+
+  useEffect(() => {
+    fetchCustomers();
+  }, []);
+
+  const handleDelete = (params: { data: Customer }) => {
+    const confirmDelete = window.confirm(
+      `Poistetaanko asiakas ${params.data.firstname} ${params.data.lastname}?`
+    );
+    if (confirmDelete) {
+      setCustomers((prev) => prev.filter((c) => c.id !== params.data.id));
+    }
+  };
+
+  const columnDefs: ColDef<Customer>[] = [
     {
       field: "firstname",
       headerName: "Etunimi",
@@ -57,21 +77,37 @@ export default function CustomerList() {
       sortable: true,
       width: 250,
     },
-  ]);
-
-  useEffect(() => {
-    setCustomers(mockCustomers);
-  }, []);
+    {
+      headerName: "",
+      width: 220,
+      cellRenderer: (params: { data: Customer }) => (
+        <>
+          <EditCustomer data={params.data} setCustomers={setCustomers} />
+          <Button
+            variant="outlined"
+            color="error"
+            size="small"
+            onClick={() => handleDelete(params)}
+          >
+            Poista
+          </Button>
+        </>
+      ),
+    },
+  ];
 
   return (
-    <div style={{ width: "90%", height: 500 }}>
-      <AgGridReact
-        rowData={customers}
-        columnDefs={columnDefs}
-        pagination={true}
-        paginationAutoPageSize={true}
-        theme={themeMaterial}
-      />
-    </div>
+    <>
+      <AddCustomer customers={customers} setCustomers={setCustomers} />
+      <div style={{ width: "90%", height: 500 }}>
+        <AgGridReact
+          rowData={customers}
+          columnDefs={columnDefs}
+          pagination={true}
+          paginationAutoPageSize={true}
+          theme={themeMaterial}
+        />
+      </div>
+    </>
   );
 }

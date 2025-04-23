@@ -6,10 +6,34 @@ import {
   ColDef,
   themeMaterial,
 } from "ag-grid-community";
-import { Training } from "../types";
+import { Training, Customer } from "../types";
 import "ag-grid-community/styles/ag-theme-material.css";
+import Snackbar from "@mui/material/Snackbar";
+import Button from "@mui/material/Button";
+import AddTraining from "./AddTraining";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
+
+const mockCustomers: Customer[] = [
+  {
+    id: 1,
+    firstname: "Matti",
+    lastname: "Meikäläinen",
+    email: "matti@example.com",
+  },
+  {
+    id: 2,
+    firstname: "Essi",
+    lastname: "Esimerkki",
+    email: "essi@example.com",
+  },
+  {
+    id: 3,
+    firstname: "Kalle",
+    lastname: "Kallela",
+    email: "kalle@example.com",
+  },
+];
 
 const mockTrainings: Training[] = [
   {
@@ -17,21 +41,33 @@ const mockTrainings: Training[] = [
     date: "2025-04-21T12:30",
     activity: "Juoksu",
     duration: 30,
-    customer: { firstname: "Matti", lastname: "Meikäläinen" },
+    customer: mockCustomers[0],
   },
   {
     id: 2,
     date: "2025-04-22T14:00",
     activity: "Kuntosali",
     duration: 45,
-    customer: { firstname: "Essi", lastname: "Esimerkki" },
+    customer: mockCustomers[1],
   },
 ];
 
 export default function TrainingList() {
   const [trainings, setTrainings] = useState<Training[]>([]);
+  const [open, setOpen] = useState(false);
 
-  const [columnDefs] = useState<ColDef<Training>[]>([
+  useEffect(() => {
+    setTrainings(mockTrainings);
+  }, []);
+
+  const handleDelete = (params: { data: Training }) => {
+    if (window.confirm("Poistetaanko harjoitus?")) {
+      setTrainings((prev) => prev.filter((t) => t.id !== params.data.id));
+      setOpen(true);
+    }
+  };
+
+  const columnDefs: ColDef<Training>[] = [
     {
       field: "date",
       headerName: "Päivämäärä",
@@ -71,21 +107,40 @@ export default function TrainingList() {
       filter: true,
       width: 200,
     },
-  ]);
-
-  useEffect(() => {
-    setTrainings(mockTrainings);
-  }, []);
+    {
+      headerName: "Toiminnot",
+      width: 140,
+      cellRenderer: (params: { data: Training }) => (
+        <Button
+          variant="outlined"
+          color="error"
+          size="small"
+          onClick={() => handleDelete(params)}
+        >
+          Poista
+        </Button>
+      ),
+    },
+  ];
 
   return (
-    <div style={{ width: "90%", height: 500 }}>
-      <AgGridReact
-        rowData={trainings}
-        columnDefs={columnDefs}
-        pagination={true}
-        paginationAutoPageSize={true}
-        theme={themeMaterial}
+    <>
+      <AddTraining customers={mockCustomers} setTrainings={setTrainings} />
+      <div style={{ width: "90%", height: 500 }}>
+        <AgGridReact
+          rowData={trainings}
+          columnDefs={columnDefs}
+          pagination
+          paginationAutoPageSize
+          theme={themeMaterial}
+        />
+      </div>
+      <Snackbar
+        open={open}
+        autoHideDuration={3000}
+        onClose={() => setOpen(false)}
+        message="Harjoitus poistettu"
       />
-    </div>
+    </>
   );
 }
