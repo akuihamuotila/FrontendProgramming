@@ -10,18 +10,19 @@ import {
 import { Customer } from "../types";
 
 type Props = {
-  customers: Customer[];
-  setCustomers: React.Dispatch<React.SetStateAction<Customer[]>>;
-  fetchCustomers?: () => void;
+  onSave: (customer: Customer) => void;
 };
 
-export default function AddCustomer({ customers, setCustomers }: Props) {
+export default function AddCustomer({ onSave }: Props) {
   const [open, setOpen] = useState(false);
   const [customer, setCustomer] = useState<Customer>({
-    id: 0,
     firstname: "",
     lastname: "",
+    streetaddress: "",
+    postcode: "",
+    city: "",
     email: "",
+    phone: "",
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -29,9 +30,17 @@ export default function AddCustomer({ customers, setCustomers }: Props) {
   };
 
   const handleSave = () => {
-    const newId = Math.max(0, ...customers.map((c) => c.id)) + 1;
-    setCustomers([...customers, { ...customer, id: newId }]);
+    onSave(customer);
     setOpen(false);
+    setCustomer({
+      firstname: "",
+      lastname: "",
+      streetaddress: "",
+      postcode: "",
+      city: "",
+      email: "",
+      phone: "",
+    });
   };
 
   return (
@@ -46,30 +55,62 @@ export default function AddCustomer({ customers, setCustomers }: Props) {
             margin="dense"
             label="Etunimi"
             name="firstname"
-            fullWidth
             value={customer.firstname}
             onChange={handleChange}
+            fullWidth
           />
           <TextField
             margin="dense"
             label="Sukunimi"
             name="lastname"
-            fullWidth
             value={customer.lastname}
             onChange={handleChange}
+            fullWidth
+          />
+          <TextField
+            margin="dense"
+            label="Katuosoite"
+            name="streetaddress"
+            value={customer.streetaddress}
+            onChange={handleChange}
+            fullWidth
+          />
+          <TextField
+            margin="dense"
+            label="Postinumero"
+            name="postcode"
+            value={customer.postcode}
+            onChange={handleChange}
+            fullWidth
+          />
+          <TextField
+            margin="dense"
+            label="Kaupunki"
+            name="city"
+            value={customer.city}
+            onChange={handleChange}
+            fullWidth
           />
           <TextField
             margin="dense"
             label="Sähköposti"
             name="email"
-            fullWidth
             value={customer.email}
             onChange={handleChange}
+            fullWidth
+          />
+          <TextField
+            margin="dense"
+            label="Puhelin"
+            name="phone"
+            value={customer.phone}
+            onChange={handleChange}
+            fullWidth
           />
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpen(false)}>Peruuta</Button>
-          <Button onClick={handleSave} variant="contained">
+          <Button variant="contained" onClick={handleSave}>
             Tallenna
           </Button>
         </DialogActions>

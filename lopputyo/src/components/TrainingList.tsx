@@ -8,62 +8,60 @@ import {
 } from "ag-grid-community";
 import { Training, Customer } from "../types";
 import "ag-grid-community/styles/ag-theme-material.css";
-import Snackbar from "@mui/material/Snackbar";
 import Button from "@mui/material/Button";
+import Snackbar from "@mui/material/Snackbar";
 import AddTraining from "./AddTraining";
+import { getTrainings, addTraining, deleteTraining } from "../api/trainingapi";
+import { getCustomers } from "../api/customerapi";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
-const mockCustomers: Customer[] = [
-  {
-    id: 1,
-    firstname: "Matti",
-    lastname: "Meikäläinen",
-    email: "matti@example.com",
-  },
-  {
-    id: 2,
-    firstname: "Essi",
-    lastname: "Esimerkki",
-    email: "essi@example.com",
-  },
-  {
-    id: 3,
-    firstname: "Kalle",
-    lastname: "Kallela",
-    email: "kalle@example.com",
-  },
-];
-
-const mockTrainings: Training[] = [
-  {
-    id: 1,
-    date: "2025-04-21T12:30",
-    activity: "Juoksu",
-    duration: 30,
-    customer: mockCustomers[0],
-  },
-  {
-    id: 2,
-    date: "2025-04-22T14:00",
-    activity: "Kuntosali",
-    duration: 45,
-    customer: mockCustomers[1],
-  },
-];
-
 export default function TrainingList() {
   const [trainings, setTrainings] = useState<Training[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    setTrainings(mockTrainings);
+    fetchTrainings();
+    fetchCustomers();
   }, []);
 
-  const handleDelete = (params: { data: Training }) => {
+  const fetchTrainings = async () => {
+    try {
+      const data = await getTrainings();
+      setTrainings(data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const fetchCustomers = async () => {
+    try {
+      const data = await getCustomers();
+      setCustomers(data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleAdd = async (training: Training) => {
+    try {
+      await addTraining(training);
+      fetchTrainings();
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleDelete = async (url: string) => {
     if (window.confirm("Poistetaanko harjoitus?")) {
-      setTrainings((prev) => prev.filter((t) => t.id !== params.data.id));
-      setOpen(true);
+      try {
+        await deleteTraining(url);
+        fetchTrainings();
+        setOpen(true);
+      } catch (error) {
+        console.error(error);
+      }
     }
   };
 
@@ -99,23 +97,49 @@ export default function TrainingList() {
     },
     {
       headerName: "Asiakas",
-      valueGetter: (params) =>
-        `${params.data?.customer?.firstname ?? ""} ${
-          params.data?.customer?.lastname ?? ""
-        }`,
+      valueGetter: (params) => {
+        // Tarkistetaan ensin, onko asiakastieto saatavilla
+        const customerHref = params.data?.customer?._links?.customer?.href;
+
+        if (!customerHref) {
+          console.log("Asiakastieto puuttuu, href ei löytynyt"); // Debugging
+          return "Tuntematon1"; // Jos ei löydy asiakkaan href
+        }
+
+        // Etsi asiakas href:n perusteella
+        const customer = customers.find((c) => {
+          console.log(
+            "Etsitään asiakasta href:n perusteella",
+            c._links?.customer?.href
+          ); // Debugging
+          return c._links?.customer?.href === customerHref;
+        });
+
+        // Jos asiakas löytyy, näytä nimi
+        if (customer) {
+          console.log("Asiakas löytyi:", customer.firstname, customer.lastname); // Debugging
+          return `${customer.firstname} ${customer.lastname}`; // Yhdistetään etunimi ja sukunimi
+        } else {
+          console.log("Asiakasta ei löytynyt"); // Debugging
+          return "Tuntematon2"; // Jos asiakasta ei löydy
+        }
+      },
       sortable: true,
       filter: true,
       width: 200,
     },
     {
-      headerName: "Toiminnot",
+      headerName: "Poista",
       width: 140,
       cellRenderer: (params: { data: Training }) => (
         <Button
           variant="outlined"
           color="error"
           size="small"
-          onClick={() => handleDelete(params)}
+          onClick={() =>
+            params.data._links?.self?.href &&
+            handleDelete(params.data._links.self.href)
+          }
         >
           Poista
         </Button>
@@ -125,8 +149,8 @@ export default function TrainingList() {
 
   return (
     <>
-      <AddTraining customers={mockCustomers} setTrainings={setTrainings} />
-      <div style={{ width: "90%", height: 500 }}>
+      <AddTraining customers={customers} onSave={handleAdd} />
+      <div style={{ width: "100%", height: 600 }}>
         <AgGridReact
           rowData={trainings}
           columnDefs={columnDefs}

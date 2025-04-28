@@ -11,18 +11,17 @@ import {
   InputLabel,
   FormControl,
 } from "@mui/material";
-import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
-import { LocalizationProvider } from "@mui/x-date-pickers";
+import { DateTimePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs, { Dayjs } from "dayjs";
 import { Training, Customer } from "../types";
 
 type Props = {
   customers: Customer[];
-  setTrainings: React.Dispatch<React.SetStateAction<Training[]>>;
+  onSave: (training: Training) => Promise<void>;
 };
 
-export default function AddTraining({ customers, setTrainings }: Props) {
+export default function AddTraining({ customers, onSave }: Props) {
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState<Dayjs | null>(dayjs());
   const [activity, setActivity] = useState("");
@@ -31,18 +30,17 @@ export default function AddTraining({ customers, setTrainings }: Props) {
     null
   );
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!date || !activity || !duration || !selectedCustomer) return;
 
     const newTraining: Training = {
-      id: Date.now(),
       date: date.toISOString(),
       activity,
       duration: Number(duration),
       customer: selectedCustomer,
     };
 
-    setTrainings((prev) => [...prev, newTraining]);
+    await onSave(newTraining);
     setOpen(false);
     setActivity("");
     setDuration("");
@@ -84,17 +82,17 @@ export default function AddTraining({ customers, setTrainings }: Props) {
               <InputLabel id="customer-label">Asiakas</InputLabel>
               <Select
                 labelId="customer-label"
-                value={selectedCustomer?.id || ""}
+                value={selectedCustomer ? selectedCustomer.email : ""}
                 onChange={(e) => {
                   const customer = customers.find(
-                    (c) => c.id === Number(e.target.value)
+                    (c) => c.email === e.target.value
                   );
                   setSelectedCustomer(customer || null);
                 }}
                 label="Asiakas"
               >
                 {customers.map((c) => (
-                  <MenuItem key={c.id} value={c.id}>
+                  <MenuItem key={c.email} value={c.email}>
                     {c.firstname} {c.lastname}
                   </MenuItem>
                 ))}

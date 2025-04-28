@@ -9,49 +9,75 @@ import {
 import { Customer } from "../types";
 import "ag-grid-community/styles/ag-theme-material.css";
 import Button from "@mui/material/Button";
+import Snackbar from "@mui/material/Snackbar";
 import AddCustomer from "./AddCustomer";
 import EditCustomer from "./EditCustomer";
+import {
+  getCustomers,
+  addCustomer,
+  updateCustomer,
+  deleteCustomer,
+  resetDatabase,
+} from "../api/customerapi";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
-const mockCustomers: Customer[] = [
-  {
-    id: 1,
-    firstname: "Matti",
-    lastname: "Meikäläinen",
-    email: "matti@example.com",
-  },
-  {
-    id: 2,
-    firstname: "Essi",
-    lastname: "Esimerkki",
-    email: "essi@example.com",
-  },
-  {
-    id: 3,
-    firstname: "Kalle",
-    lastname: "Kallela",
-    email: "kalle@example.com",
-  },
-];
-
 export default function CustomerList() {
   const [customers, setCustomers] = useState<Customer[]>([]);
-
-  const fetchCustomers = () => {
-    setCustomers(mockCustomers);
-  };
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     fetchCustomers();
   }, []);
 
-  const handleDelete = (params: { data: Customer }) => {
-    const confirmDelete = window.confirm(
-      `Poistetaanko asiakas ${params.data.firstname} ${params.data.lastname}?`
-    );
-    if (confirmDelete) {
-      setCustomers((prev) => prev.filter((c) => c.id !== params.data.id));
+  const fetchCustomers = async () => {
+    try {
+      const data = await getCustomers();
+      setCustomers(data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleAdd = async (customer: Customer) => {
+    try {
+      await addCustomer(customer);
+      fetchCustomers();
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleUpdate = async (url: string, customer: Customer) => {
+    try {
+      await updateCustomer(url, customer);
+      fetchCustomers();
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleDelete = async (url: string) => {
+    if (window.confirm("Poistetaanko asiakas?")) {
+      try {
+        await deleteCustomer(url);
+        fetchCustomers();
+        setOpen(true);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+  };
+
+  const handleReset = async () => {
+    if (window.confirm("Haluatko varmasti resetoida tietokannan?")) {
+      try {
+        await resetDatabase();
+        await fetchCustomers();
+        setOpen(true);
+      } catch (error) {
+        console.error(error);
+      }
     }
   };
 
@@ -61,53 +87,104 @@ export default function CustomerList() {
       headerName: "Etunimi",
       filter: true,
       sortable: true,
-      width: 150,
+      width: 120,
     },
     {
       field: "lastname",
       headerName: "Sukunimi",
       filter: true,
       sortable: true,
-      width: 150,
+      width: 130,
+    },
+    {
+      field: "streetaddress",
+      headerName: "Katuosoite",
+      filter: true,
+      sortable: true,
+      width: 160,
+    },
+    {
+      field: "postcode",
+      headerName: "Postinro",
+      filter: true,
+      sortable: true,
+      width: 120,
+    },
+    {
+      field: "city",
+      headerName: "Kaupunki",
+      filter: true,
+      sortable: true,
+      width: 125,
     },
     {
       field: "email",
       headerName: "Sähköposti",
       filter: true,
       sortable: true,
-      width: 250,
+      width: 170,
     },
     {
-      headerName: "",
-      width: 220,
+      field: "phone",
+      headerName: "Puhelin",
+      filter: true,
+      sortable: true,
+      width: 140,
+    },
+    {
+      headerName: "Muokkaa",
+      width: 140,
       cellRenderer: (params: { data: Customer }) => (
-        <>
-          <EditCustomer data={params.data} setCustomers={setCustomers} />
-          <Button
-            variant="outlined"
-            color="error"
-            size="small"
-            onClick={() => handleDelete(params)}
-          >
-            Poista
-          </Button>
-        </>
+        <EditCustomer data={params.data} onSave={handleUpdate} />
+      ),
+    },
+    {
+      headerName: "Poista",
+      width: 140,
+      cellRenderer: (params: { data: Customer }) => (
+        <Button
+          variant="outlined"
+          color="error"
+          size="small"
+          onClick={() =>
+            params.data._links?.customer?.href &&
+            handleDelete(params.data._links.customer.href)
+          }
+        >
+          Poista
+        </Button>
       ),
     },
   ];
 
   return (
     <>
-      <AddCustomer customers={customers} setCustomers={setCustomers} />
-      <div style={{ width: "90%", height: 500 }}>
+      <div style={{ display: "flex", gap: "1rem", marginBottom: "1rem" }}>
+        <AddCustomer onSave={handleAdd} />
+        <Button
+          variant="contained"
+          color="error"
+          onClick={handleReset}
+          sx={{ mb: 2 }}
+        >
+          Resetoi tietokanta
+        </Button>
+      </div>
+      <div style={{ width: "100%", height: 600 }}>
         <AgGridReact
           rowData={customers}
           columnDefs={columnDefs}
-          pagination={true}
-          paginationAutoPageSize={true}
+          pagination
+          paginationAutoPageSize
           theme={themeMaterial}
         />
       </div>
+      <Snackbar
+        open={open}
+        autoHideDuration={3000}
+        onClose={() => setOpen(false)}
+        message="Toiminto suoritettu"
+      />
     </>
   );
 }
