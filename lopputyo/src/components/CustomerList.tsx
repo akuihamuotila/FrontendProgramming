@@ -81,6 +81,34 @@ export default function CustomerList() {
     }
   };
 
+  const handleExportCSV = () => {
+    const headers = [
+      "firstname",
+      "lastname",
+      "streetaddress",
+      "postcode",
+      "city",
+      "email",
+      "phone",
+    ];
+
+    const rows = customers.map((c) =>
+      headers.map((header) => c[header as keyof Customer])
+    );
+
+    const csvContent =
+      "data:text/csv;charset=utf-8," +
+      [headers.join(","), ...rows.map((row) => row.join(","))].join("\n");
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "customers.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const columnDefs: ColDef<Customer>[] = [
     {
       field: "firstname",
@@ -161,6 +189,14 @@ export default function CustomerList() {
     <>
       <div style={{ display: "flex", gap: "1rem", marginBottom: "1rem" }}>
         <AddCustomer onSave={handleAdd} />
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleExportCSV}
+          sx={{ mb: 2 }}
+        >
+          Export CSV
+        </Button>
         <Button
           variant="contained"
           color="error"

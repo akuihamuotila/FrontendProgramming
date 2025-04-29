@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -6,46 +6,62 @@ import {
   DialogActions,
   TextField,
   Button,
-  MenuItem,
   Select,
+  MenuItem,
   InputLabel,
   FormControl,
 } from "@mui/material";
 import { DateTimePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs, { Dayjs } from "dayjs";
-import { Training, Customer } from "../types";
+import { Customer } from "../types";
+import { getCustomers } from "../api/customerapi";
 
 type Props = {
-  customers: Customer[];
-  onSave: (training: Training) => Promise<void>;
+  onSave: (training: {
+    date: string;
+    activity: string;
+    duration: number;
+    customer: string;
+  }) => Promise<void>;
 };
 
-export default function AddTraining({ customers, onSave }: Props) {
+export default function AddTraining({ onSave }: Props) {
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState<Dayjs | null>(dayjs());
   const [activity, setActivity] = useState("");
   const [duration, setDuration] = useState("");
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
-    null
-  );
+  const [customerLink, setCustomerLink] = useState("");
+  const [customers, setCustomers] = useState<Customer[]>([]);
+
+  useEffect(() => {
+    fetchCustomers();
+  }, []);
+
+  const fetchCustomers = async () => {
+    try {
+      const data = await getCustomers();
+      setCustomers(data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   const handleSave = async () => {
-    if (!date || !activity || !duration || !selectedCustomer) return;
+    if (!date || !activity || !duration || !customerLink) return;
 
-    const newTraining: Training = {
+    await onSave({
       date: date.toISOString(),
       activity,
       duration: Number(duration),
-      customer: selectedCustomer,
-    };
+      customer: customerLink,
+    });
 
-    await onSave(newTraining);
     setOpen(false);
     setActivity("");
     setDuration("");
     setDate(dayjs());
-    setSelectedCustomer(null);
+    setCustomerLink("");
   };
 
   return (
@@ -82,18 +98,16 @@ export default function AddTraining({ customers, onSave }: Props) {
               <InputLabel id="customer-label">Asiakas</InputLabel>
               <Select
                 labelId="customer-label"
-                value={selectedCustomer ? selectedCustomer.email : ""}
-                onChange={(e) => {
-                  const customer = customers.find(
-                    (c) => c.email === e.target.value
-                  );
-                  setSelectedCustomer(customer || null);
-                }}
+                value={customerLink}
+                onChange={(e) => setCustomerLink(e.target.value)}
                 label="Asiakas"
               >
-                {customers.map((c) => (
-                  <MenuItem key={c.email} value={c.email}>
-                    {c.firstname} {c.lastname}
+                {customers.map((customer) => (
+                  <MenuItem
+                    key={customer._links?.self.href}
+                    value={customer._links?.self.href}
+                  >
+                    {customer.firstname} {customer.lastname}
                   </MenuItem>
                 ))}
               </Select>

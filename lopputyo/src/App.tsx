@@ -2,6 +2,7 @@ import { Routes, Route, Link } from "react-router-dom";
 import Button from "@mui/material/Button";
 import CustomerList from "./components/CustomerList";
 import TrainingList from "./components/TrainingList";
+import TrainingCalendar from "./components/TrainingCalendar";
 
 const App = () => {
   return (
@@ -23,10 +24,19 @@ const App = () => {
         >
           Harjoitukset
         </Button>
+        <Button
+          component={Link}
+          to="/calendar"
+          variant="contained"
+          color="primary"
+        >
+          Kalenteri
+        </Button>
       </nav>
       <Routes>
         <Route path="/customers" element={<CustomerList />} />
         <Route path="/trainings" element={<TrainingList />} />
+        <Route path="/calendar" element={<TrainingCalendar />} />
       </Routes>
     </>
   );

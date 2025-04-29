@@ -7,30 +7,16 @@ export type Customer = {
   email: string;
   phone: string;
   _links?: {
-    self: {
-      href: string;
-    };
-    customer: {
-      href: string;
-    };
-    trainings: {
-      href: string;
-    };
+    self: { href: string };
+    customer: { href: string };
+    trainings: { href: string };
   };
 };
 
 export type Training = {
-  id?: number;
+  id: number;
   date: string;
   activity: string;
   duration: number;
   customer: Customer;
-  _links?: {
-    self: {
-      href: string;
-    };
-    training: {
-      href: string;
-    };
-  };
 };

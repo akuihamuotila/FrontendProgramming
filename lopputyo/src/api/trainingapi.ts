@@ -1,7 +1,7 @@
 import { Training } from "../types";
 
 const API_URL =
-  "https://customer-rest-service-frontend-personaltrainer.2.rahtiapp.fi/api/trainings";
+  "https://customer-rest-service-frontend-personaltrainer.2.rahtiapp.fi/api";
 
 const fetchJson = async (url: string, options?: RequestInit) => {
   const response = await fetch(url, options);
@@ -12,12 +12,17 @@ const fetchJson = async (url: string, options?: RequestInit) => {
 };
 
 export const getTrainings = async (): Promise<Training[]> => {
-  const data = await fetchJson(API_URL);
-  return data._embedded.trainings;
+  const data = await fetchJson(`${API_URL}/gettrainings`);
+  return data;
 };
 
-export const addTraining = async (training: Training): Promise<void> => {
-  await fetchJson(API_URL, {
+export const addTraining = async (training: {
+  date: string;
+  activity: string;
+  duration: number;
+  customer: string;
+}): Promise<void> => {
+  await fetchJson(`${API_URL}/trainings`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(training),
